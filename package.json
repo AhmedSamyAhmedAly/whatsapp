@@ -1,0 +1,25 @@
+{
+   "name": "ahmedelsamy",
+   "version": "1.0.0",
+   "type": "module",
+   "main": "index.js",
+   "scripts": {
+      "start": "node index.js",
+      "dev": "nodemon index.js",
+      "test": "echo \"Error: no test specified\" && exit 1"
+   },
+   "keywords": [],
+   "author": "",
+   "license": "ISC",
+   "description": "",
+   "dependencies": {
+      "axios": "^1.12.2",
+      "body-parser": "^2.2.0",
+      "dotenv": "^17.2.3",
+      "express": "^5.1.0",
+      "whatsapp": "^0.0.5-Alpha"
+   },
+   "devDependencies": {
+      "nodemon": "^3.1.10"
+   }
+}
