@@ -47,16 +47,30 @@ app.get("/whatsapp/webhook", (req, res) => {
 
 // --- Webhook receiver ---
 app.post("/whatsapp/webhook", async (req, res) => {
+  // Always 200 immediately so Meta doesn't retry
   res.sendStatus(200);
+
   try {
-    const entry = req.body?.entry?.[0];
-    const change = entry?.changes?.[0];
-    const messages = change?.value?.messages;
-    if (!messages || !messages.length) return;
+    const change = req.body?.entry?.[0]?.changes?.[0];
+    const value  = change?.value || {};
+    const messages = value.messages || [];
+    const statuses = value.statuses || [];
+
+    // 1) Log delivery status callbacks (why a message didn’t arrive, etc.)
+    if (statuses.length) {
+      const s = statuses[0];
+      console.log("[DELIVERY STATUS]", JSON.stringify(s, null, 2));
+      if (s.status === "failed" && Array.isArray(s.errors) && s.errors.length) {
+        console.error("[DELIVERY ERROR]", JSON.stringify(s.errors[0], null, 2));
+      }
+    }
+
+    // 2) Handle incoming user messages (your original logic)
+    if (!messages.length) return;
 
     const msg = messages[0];
 
-    // mark as read
+    // best-effort: mark as read
     if (msg.id) {
       graph.post("/messages", {
         messaging_product: "whatsapp",
@@ -65,7 +79,7 @@ app.post("/whatsapp/webhook", async (req, res) => {
       }).catch(() => {});
     }
 
-    // echo text
+    // simple echo for text
     if (msg.type === "text") {
       const from = msg.from;
       const text = msg.text?.body || "";
@@ -77,9 +91,10 @@ app.post("/whatsapp/webhook", async (req, res) => {
       });
     }
   } catch (e) {
-    console.error("[webhook error]", e?.message || e);
+    console.error("[WEBHOOK PARSE ERROR]", e?.message || e);
   }
 });
+
 
 // --- Send text ---
 app.post("/whatsapp/send/text", async (req, res) => {
